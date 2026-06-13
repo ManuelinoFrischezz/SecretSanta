@@ -1,0 +1,12 @@
+[
+  {
+    "name": "User1",
+    "participation": "True",
+    "cant_take": []
+  },
+  {
+    "name": "User2",
+    "participation": "True",
+    "cant_take": []
+  }
+]

@@ -1,0 +1,8 @@
+NgrokRecoveryCodes.txt
+.env
+venv_babbo/
+.DS_Store
+__pycache__/
+assignments/
+participants.json
+.zed/
