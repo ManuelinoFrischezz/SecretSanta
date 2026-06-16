@@ -274,8 +274,24 @@ with st.sidebar:
 
 
 def __main__():
+
+    if "selected_name" not in st.session_state:
+        st.session_state["selected_name"] = ""
+
+    if "reveal" not in st.session_state:
+        st.session_state["reveal"] = False
+
     # Titolo
-    st.title("🎅 Babbo Natale Segreto")
+    st.markdown(
+        """
+        <div style="
+            text-align: center;
+        ">
+            <h2>🎅 Babbo Natale Segreto</h2>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     st.markdown("---")
 
     col1, col2 = st.columns(2)
@@ -301,25 +317,31 @@ def __main__():
     st.subheader("🎄 Seleziona il tuo nome")
 
     # Usa session_state per controllare la selezione
-    if "selected_name" not in st.session_state:
+    participants_options = [""] + st.session_state["participants"]
+
+    selected_name = st.session_state.get(
+        "selected_name",
+        "",
+    )
+
+    if selected_name not in participants_options:
+        selected_name = ""
         st.session_state.selected_name = ""
+
+    selected_index = participants_options.index(selected_name)
 
     selected_name = st.selectbox(
         "Chi sei?",
-        options=[""] + st.session_state["participants"],
+        options=participants_options,
         format_func=lambda x: "Scegli il tuo nome..." if x == "" else x,
         key="name_selector",
-        index=0
-        if st.session_state.selected_name == ""
-        else ([""] + st.session_state["participants"]).index(
-            st.session_state.selected_name
-        ),
+        index=selected_index,
     )
 
     # Aggiorna lo stato
-    if selected_name != st.session_state.selected_name:
-        st.session_state.selected_name = selected_name
-        st.session_state.reveal = False
+    if selected_name != st.session_state["selected_name"]:
+        st.session_state["selected_name"] = selected_name
+        st.session_state["reveal"] = False
 
     if selected_name:
         st.markdown("---")
@@ -329,29 +351,61 @@ def __main__():
 
         if encrypted_name and encryption_key:
             # Mostra un pulsante per rivelare il nome
-            col1, col2 = st.columns([1, 2])
+            left_spacer, button_col, right_spacer = st.columns([3, 2, 3])
 
-            with col2:
+            with button_col:
                 if st.button(
                     "🎁 Scopri chi hai sorteggiato!",
                     type="primary",
                     use_container_width=True,
                 ):
-                    st.session_state.reveal = True
+                    st.session_state["reveal"] = True
 
             # Se il pulsante è stato premuto, mostra il nome
             if st.session_state.get("reveal", False):
                 decrypted_name = decrypt_assignment(encrypted_name, encryption_key)
 
                 if decrypted_name:
-                    st.success(f"### 🎉 Hai sorteggiato: **{decrypted_name}**")
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background-color: #1e4625;
+                            padding: 1rem;
+                            border-radius: 0.8rem;
+                            text-align: center;
+                            color: white;
+                            margin-top: 0.8rem;
+                            margin-bottom: 0.8rem;
+                        ">
+                            <h3>🎉 Hai sorteggiato:</h3>
+                            <h2>{decrypted_name}</h2>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
-                    st.info(
-                        "💡 **Ricorda:** È un segreto! Non fare l'infame e tienilo per te. 🤫"
+                    st.markdown(
+                        """
+                        <div style="
+                            background-color: rgba(255, 193, 7, 0.15);
+                            border: 1px solid rgba(255, 193, 7, 0.35);
+                            padding: 0.8rem;
+                            border-radius: 0.5rem;
+                            text-align: center;
+                            color: rgb(255, 193, 7);
+                            margin-top: 0.8rem;
+                            margin-bottom: 0.8rem;
+                            font-size: 0.9rem;
+                            font-weight: 500;
+                        ">
+                            💡 Ricorda: È un segreto! Non fare l'infame e tienilo per te. 🤫
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
                     )
 
                     # Timer per nascondere dopo 3 secondi
-                    time.sleep(3)
+                    time.sleep(5)
 
                     # Reset dello stato e della selezione
                     st.session_state.reveal = False
