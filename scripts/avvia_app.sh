@@ -9,12 +9,9 @@ set -a
 source ".env"
 set +a
 
-# Generate a new draw only when needed.
-# A new draw is skipped if every active participant in
-# participants.json already has a corresponding assignment file.
-# This effectively acts as a local cache of the latest draw.
 set -euo pipefail
 
+# Get current assignment filenames
 assignment_names=$(
     find config/assignments \
         -type f \
@@ -23,6 +20,7 @@ assignment_names=$(
     | sort
 )
 
+# Get active participants
 participant_names=$(
     venv_babbo/bin/python - <<'PY'
 import json
@@ -39,19 +37,31 @@ for name in sorted(
 PY
 )
 
+# Run extraction only if needed
 if diff \
     <(echo "$assignment_names") \
     <(echo "$participant_names") \
     >/dev/null
 then
+
     echo "Assignments are up to date."
+
 else
+
     echo "Assignments mismatch. Running extraction..."
-    venv_babbo/bin/python src/babbo_natale_segreto/extraction.py
+
+    rm -f config/assignments/*.txt
+
+    PYTHONPATH=src \
+    venv_babbo/bin/python \
+        src/babbo_natale_segreto/extraction.py
 fi
 
 # Start Streamlit
-venv_babbo/bin/streamlit run src/streamlit_app/app_streamlit.py &
+PYTHONPATH=src \
+venv_babbo/bin/streamlit run \
+    src/streamlit_app/app_streamlit.py &
 
 # Expose the service through ngrok
-ngrok http "$PORT_NUMBER" --basic-auth "$ACCESS_KEY"
+ngrok http "$PORT_NUMBER" \
+    --basic-auth "$ACCESS_KEY"
